@@ -2,8 +2,8 @@
 /*
 
 cd "C:\Users\Inspiron 15\Desktop\ed.proyecto1"
-g++ -std=c++17 -Wall -Wextra -Wpedantic proyecto2.cpp -o proyecto2
-./proyecto2
+g++ -std=c++17 -Wall -Wextra -Wpedantic proyecto.cpp -o proyecto
+./proyecto
 
 */
 
@@ -13,11 +13,14 @@ g++ -std=c++17 -Wall -Wextra -Wpedantic proyecto2.cpp -o proyecto2
 #include <cmath>
 #include <time.h>       /* time_t, struct tm, time, localtime */
 #include <ctime>
+#include <limits>
+#include <bits/stdc++.h>
 
 using std::cout; using std::cin;
 using std::endl; using std::string;
 using std::rand; // int r = rand() % e; // 0 <= r <= (e - 1)
 using std::time;
+using std::getline;
 
 class Partida
 {
@@ -38,6 +41,9 @@ class Partida
 		//duracion
 		
 };
+//char nombre[]
+//this->nombre = nombre ;
+//char *nombre;
 
 class Resultados
 {
@@ -146,6 +152,7 @@ class Orden
 		void agregarCasillas(int cas);
 		void printOrden();
 		void ordenAleatorio();
+		void ordenManual(int cas);
 };
 
 // F I N A L I Z A D O
@@ -189,28 +196,7 @@ void Orden::printOrden()
 	}
 	cout << "\n";
 }
-//********************************************************************************************************************************
-void ingresarOrdenManual()
-{
-	Orden ord{};
-	
-	while(true)
-	{
-		try
-		{
-			int t;
-			cin >> t;
-			ord.agregarCasilla(t); 
-			
-		}
-			catch(...)
-			{
-				break;
-			}
-	}
-	ord.printOrden();
-	cout << "\nfin de programa\n";
-}
+
 
 class Tablero3D
 {
@@ -238,6 +224,7 @@ class Tablero3D
 			tableroMultiple(fil,col, tbl);
 		};
 		
+		void tableroManual();
 		int calcularPuntaje();
 		void jugarPartida();
 		void tableroAleatorio();
@@ -245,6 +232,7 @@ class Tablero3D
 		void elegirPosicionVacia(int fil,int col,int tbl);
 		void moverPosicionVacia(char key);
 		void printTablero();
+		void cambiarPosicionVacia();
 };
 
 // F I N A L I Z A D O
@@ -275,6 +263,12 @@ void Tablero3D::tableroMultiple(int fil,int col,int tbl)
 		}
 }
 
+// la dirferencia entre tableroAleatorio() y tableroManual() es que 
+// en el primero se relizan dos pasos para incrustar el orden al tablero: 1) se agrega casillas a la lista 
+// y 2) se ordenan esas casillas de forma aleatoria
+// en cambio para el segundo se agrega una casilla a la lista e inmediatamente se pide ingresar 
+// el numero de esa casilla, repitiendo este proceso hasta alcanzar la cantidad de posiciones del tablero
+
 void Tablero3D::tableroAleatorio()
 {
 	ord.agregarCasillas(fil*col*tbl - 1); // casillas del tablero - 1 casilla
@@ -283,6 +277,12 @@ void Tablero3D::tableroAleatorio()
 	incrustarNumeros(ord);
 }
 
+void Tablero3D::tableroManual()
+{
+	ord.ordenManual(fil*col*tbl);
+	
+	incrustarNumeros(ord);
+}
 
 // F I N A L I Z A D O
 void Tablero3D::tableroInicial(int fil, int col) 
@@ -374,6 +374,26 @@ void Tablero3D::aderirTablero()
 	}
 	
 	ptrFin = lista2.ptrIni; // para finalizar cambiamos ptrFin hacia el nuevo tablero
+}
+
+void Orden::ordenManual(int cas)
+{
+	cout << ">> para poblar el tablero completamente ingrese " << cas << " numeros en el orden:\n";
+	cout << "   de izq. a der., de arriba hacia abajo, y de frente hacia atras\n";
+
+	cout << "-> ";
+	int m;
+	cin >> m;
+	ptrIni = new Casilla{m};
+	ptrFin = ptrIni;
+	
+	for(int i = 2; i <= cas; i++)
+	{
+		cout << "-> ";
+		int n;
+		cin >> n;
+		agregarCasilla(n);
+	}
 }
 
 // F I N A L I Z A D O
@@ -552,6 +572,26 @@ void Tablero3D::elegirPosicionVacia(int fil,int col,int tbl)
 		}
 }
 
+void Tablero3D::cambiarPosicionVacia()
+{
+	cout << ">> desea cambiar la posicion vacia\n";
+	cout << "[1] si\n";
+	cout << "[2] no\n";
+	
+	int o;
+	cin >> o;
+	if(o == 1)
+	{
+		cout << ">> ingrese la nueva posicion (<fila> <columna> <tablero>): ";
+
+		int fil,col,tbl;
+		cin >> fil >> col >> tbl;
+
+		elegirPosicionVacia(fil,col,tbl);
+		printTablero();
+	}
+}
+
 // donde esta el pointer maximo entonces no se imprime esa casilla (se deja como __ )en el metodo de imprimir tablero
 // pero su valor seguira alli
 void Tablero3D::moverPosicionVacia(char key)
@@ -713,10 +753,12 @@ Resultados res{};
 void Tablero3D::jugarPartida()
 {
 	int pasos = 0;
-	string nombre{};
+	string nombre;
 	
-	cout << ">> ingrese su nombre:\n";
-	getline(cin, nombre);  
+	cout << ">> ingrese su nombre:\n"; //##############################################################################
+	cin.ignore();
+	getline(cin, nombre);
+	
 	//cin >> nombre;
 	
 	cout << "[?] para mover la casilla vacia presione:\n";
@@ -725,6 +767,7 @@ void Tablero3D::jugarPartida()
 	cout << "    q (hacia delante) y e (hacia atras)\n";
 	cout << "[?] presione 'c' para reiniciar y 'x' para abandonar\n";
 	printTablero();
+	cambiarPosicionVacia();
 	
 	while(true)
 	{
@@ -734,8 +777,7 @@ void Tablero3D::jugarPartida()
 		
 		if(c=='x')
 		{
-			cout << "<<<( PARTIDA TERMINADA )>>>\n";
-			
+			cout << "\n<<<( PARTIDA TERMINADA )>>>\n";
 			cout << ">> nombre: " << nombre << "\n";
 			int puntaje = calcularPuntaje();
 			cout << ">> puntaje: " << puntaje << "\n";
@@ -769,14 +811,14 @@ void iu()
 {
 	while(true)
 	{
-		cout << "<<<( JUEGO DEL 15 )>>>\n";
+		cout << "\n<<<( JUEGO DEL 15 )>>>\n";
 		cout << "[1] nueva partida\n";
 		cout << "[2] salir\n";
 		int i = 0;
 		cin >> i;
 		if(i == 1)
 		{
-			cout << "<<<( NUEVA PARTIDA )>>>\n";
+			cout << "\n<<<( NUEVA PARTIDA )>>>\n";
 			cout << ">> ingrese las dimensiones (<filas> <columnas> <tableros>): ";
 			int fil,col,tbl;
 			cin >> fil >> col >> tbl;
@@ -794,6 +836,18 @@ void iu()
 				tabl.tableroAleatorio();
 				tabl.jugarPartida();
 			}
+			if(j == 2)
+			{
+				cout << ":( disculpe los inconvenientes, pronto estara disponible esta caracteristica\n";
+			}
+			
+			if(j == 3)
+			{
+				Tablero3D tabl{fil,col,tbl};
+				tabl.tableroManual();
+				tabl.jugarPartida();
+			}
+			
 		}
 		if(i == 2)
 		{
@@ -803,13 +857,7 @@ void iu()
 }
 
 int main()
-{	
-	/*
-	Tablero3D temp{5,7,3};
-	temp.tableroAleatorio();	
-	temp.jugarPartida();
-	*/
-
+{
 	iu();
 	return 0;
 }
